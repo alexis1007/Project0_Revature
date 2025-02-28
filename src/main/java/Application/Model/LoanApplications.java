@@ -1,7 +1,7 @@
 package Application.Model;
 
 public class LoanApplications{
-    private int idLoanAplication;
+    private int idLoanApplication;
     private int loanType;
     private String applicationStatus;
     private float principalBalance;
@@ -12,7 +12,7 @@ public class LoanApplications{
     private LoanApplications(){
 
     }
-    private loanApplications(int loanType, String applicationStatus,float principalBalance, float interest, String borrower, String applicationDate){
+    private LoanApplications(int loanType, String applicationStatus,float principalBalance, float interest, String borrower, String applicationDate){
         this.loanType = loanType;
         this.applicationStatus = applicationStatus;
         this.principalBalance = principalBalance;
@@ -23,7 +23,7 @@ public class LoanApplications{
     //get
     public float getInterest() {        return interest;    }
     public float getPrincipalBalance() {        return principalBalance;    }
-    public int getIdLoanAplication() {        return idLoanAplication;    }
+    public int getIdLoanApplication() {        return idLoanApplication;    }
     public int getLoanType() {        return loanType;    }
     public String getApplicationDate() {        return applicationDate;    }
     public String getApplicationStatus() {        return applicationStatus;    }
@@ -32,7 +32,7 @@ public class LoanApplications{
     public void setApplicationDate(String applicationDate) {        this.applicationDate = applicationDate;    }
     public void setApplicationStatus(String applicationStatus) {        this.applicationStatus = applicationStatus;    }
     public void setBorrower(String borrower) {        this.borrower = borrower;    }
-    public void setIdLoanAplication(int idLoanAplication) {        this.idLoanAplication = idLoanAplication;    }
+    public void setIdLoanApplication(int idLoanApplication) {        this.idLoanApplication = idLoanApplication;    }
     public void setInterest(float interest) {        this.interest = interest;    }
     public void setLoanType(int loanType) {        this.loanType = loanType;    }
     public void setPrincipalBalance(float principalBalance) {        this.principalBalance = principalBalance;    }
