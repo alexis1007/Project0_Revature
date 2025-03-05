@@ -1,6 +1,6 @@
 package Application.Model;
 
-public class LoanApplications{
+public class LoanApplication {
     private int idLoanApplication;
     private int loanType;
     private int applicationStatus;
@@ -12,10 +12,10 @@ public class LoanApplications{
     private String borrower;
     private String applicationDate;
 
-    private LoanApplications(){
+    private LoanApplication(){
 
     }
-    private LoanApplications(int loanType, int applicationStatus,float principalBalance, float interest, String borrower, String applicationDate){
+    private LoanApplication(int loanType, int applicationStatus, float principalBalance, float interest, String borrower, String applicationDate){
         this.loanType = loanType;
         this.applicationStatus = applicationStatus;
         this.principalBalance = principalBalance;

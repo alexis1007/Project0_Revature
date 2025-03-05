@@ -1,6 +1,6 @@
 package Application.Model;
 
-public class UserProfiles {
+public class UserProfile {
     private int userProfileId;
     private int accountId;
     private int mailingAddress;

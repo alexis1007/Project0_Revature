@@ -1,5 +1,5 @@
 package Application.DTO;
 
-public class LoanRequestDTO {
+public class LoanApplicationsRequestDTO {
 
 }
