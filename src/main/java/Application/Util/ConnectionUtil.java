@@ -7,7 +7,7 @@ import java.sql.SQLException;
 public class ConnectionUtil {
 
     //url will represent our connection string. Since this is an in-memory db, we will represent a file location to store the data
-    private static String url = "jdbc:postgresql://localhost:5432/loans";
+    private static String url = "jdbc:postgresql://localhost:5432/postgres?currentSchema=loans";
     private static String username = "postgres";
     private static String password = "admin";
 

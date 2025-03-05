@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS loans.loan_type (
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS loans.accounts (
     accounts_id SERIAL PRIMARY KEY,
-    usuario VARCHAR(45) NOT NULL,
+    username VARCHAR(45) NOT NULL,
     password VARCHAR(45) NOT NULL,
     account_types_id INTEGER NOT NULL,
     CONSTRAINT fk_accounts_account_types
@@ -116,7 +116,7 @@ CREATE TABLE IF NOT EXISTS loans.loan_applications (
 );
 
 -- Finally: Add indexes and constraints
-CREATE INDEX idx_accounts_usuario ON loans.accounts(usuario);
+CREATE INDEX idx_accounts_username ON loans.accounts(username);
 CREATE INDEX idx_user_profiles_last_name ON loans.user_profiles(last_name);
 CREATE INDEX idx_loan_applications_application_date ON loans.loan_applications(application_date);
 

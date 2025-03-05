@@ -26,17 +26,16 @@ public class AccountsDAO {
     }
     */
     public List<Account> getAllAccounts(){
-
         Connection connection = ConnectionUtil.getConnection();
         List<Account> accounts = new ArrayList<>();
         try {
             //Write SQL logic here
-            String sql = "SELECT * FROM flight";
+            String sql = "SELECT * FROM accounts";
 
             PreparedStatement preparedStatement = connection.prepareStatement(sql);
             ResultSet rs = preparedStatement.executeQuery();
             while(rs.next()){
-                Account account = new Account(rs.getInt("accounts_id"), rs.getString("usuario"),
+                Account account = new Account(rs.getInt("accounts_id"), rs.getString("username"),
                         rs.getString("password"), rs.getInt("account_types_id"));
                 accounts.add(account);
             }
@@ -49,13 +48,13 @@ public class AccountsDAO {
         Connection connection = ConnectionUtil.getConnection();
         try {
 
-            String sql = "SELECT * FROM flight WHERE flight_id = ?";
+            String sql = "SELECT * FROM accounts WHERE accounts_id = ?";
             PreparedStatement preparedStatement = connection.prepareStatement(sql);
             preparedStatement.setInt(1,id);
 
             ResultSet rs = preparedStatement.executeQuery();
             while(rs.next()){
-                Account account = new Account(rs.getInt("accounts_id"), rs.getString("usuario"),
+                Account account = new Account(rs.getInt("accounts_id"), rs.getString("username"),
                         rs.getString("password"), rs.getInt("account_types_id"));
                 return account;
             }
@@ -70,7 +69,7 @@ public class AccountsDAO {
         try {
             //Write SQL logic here. When inserting, you only need to define the departure_city and arrival_city
             //values (two columns total!)
-            String sql = "INSERT INTO accounts (usuario, password, account_types_id) values (?, ?, ?);";
+            String sql = "INSERT INTO accounts (username, password, account_types_id) values (?, ?, ?);";
             PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 
             //write preparedStatement's setString and setInt methods here.
@@ -94,7 +93,7 @@ public class AccountsDAO {
         Connection connection = ConnectionUtil.getConnection();
         try {
 
-            String sql = "UPDATE accounts set usuario=?, password=?, account_types_id where accounts=?;";
+            String sql = "UPDATE accounts set username=?, password=?, account_types_id=? where accounts_id=?;";
             PreparedStatement preparedStatement = connection.prepareStatement(sql);
 
             preparedStatement.setString(1,account.getUsername());

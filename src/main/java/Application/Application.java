@@ -15,11 +15,12 @@ public class Application {
         MailingAddressController mailingAddressController = new MailingAddressController();
 
         Javalin app = Javalin.create(config -> {
-                /*
+            /*
+
             config.plugins.enableCors(cors -> {
                 cors.add(it -> it.anyHost());
             });
-            config.plugins.enableDevLogging(); 
+            config.plugins.enableDevLogging();
 
             */
         }).start(7070);
@@ -40,9 +41,12 @@ public class Application {
             app.get("/accounts/{account_id}", accountsController::getAccountByIdHandler);
             app.get("/accounts", accountsController::getAllAccountsHandler);
             app.put("/accounts/{account_id}", accountsController::updateAccountHandler);
-            app.post("/accounts/login", accountsController::loginHandler);  // <- Change this line
+
+                        // PENIENTE
+            app.post("/accounts/login", accountsController::loginHandler);
         
             /*
+
             // User profiles routes
             app.post("/profiles", userProfilesController::createProfileHandler);
             app.get("/profiles/{profile_id}", userProfilesController::getProfileHandler);
