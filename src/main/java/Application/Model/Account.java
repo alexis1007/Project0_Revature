@@ -1,23 +1,27 @@
 package Application.Model;
 
-public class accounts {
+public class Accounts {
     private int id;
     private String username;
     private String password;
     private int accountType;
 
-    public accounts(){    }
-    public accounts(int id, String username, String password){
+    public Accounts(){    }
+    public Accounts(int id, String username, String password, int accountType){
         this.id = id;
         this.username = username;
         this.password = password;
+        this.accountType = accountType;
     }
     public int getId(){        return id;    }
     public void setId(int id){        this.id = id;    }
+
     public String getUsername(){        return username;    }
     public void setUsername(String password){        this.username = username;    }
+
     public String getPassword() {        return password;    }
     public void setPassword(String password) {        this.password = password;    }
+
     public int getAccountType() {        return accountType;    }
     public void setAccountType(int accountType) {        this.accountType = accountType;    }
 
@@ -27,6 +31,7 @@ public class accounts {
                 "id=" +id+
                 ", user name='"+username+'\''+
                 ", password='"+password+'\''+
+                ", account type='"+accountType+'\''+
                 '}';
 
     }

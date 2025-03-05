@@ -1,6 +1,6 @@
 package Application.Service;
 
-public class UserService {
+public class UserProfileService {
     private String url;
     private String user;
     private String password;
