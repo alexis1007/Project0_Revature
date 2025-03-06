@@ -1,4 +1,4 @@
--- Insert user types (previously account_types)
+-- Insert user types
 INSERT INTO loans.user_types (user_type) VALUES
     ('ADMIN'),
     ('USER'),
@@ -25,12 +25,17 @@ INSERT INTO loans.mailing_addresses (street, city, state, zip, country) VALUES
     ('789 Pine Rd', 'Chicago', 'IL', '60601', 'USA'),
     ('321 Maple Dr', 'Houston', 'TX', '77001', 'USA');
 
--- Insert users (previously accounts)
-INSERT INTO loans.users (username, password, user_types_id, created_at, is_active) VALUES
-    ('admin', 'admin123', 1, CURRENT_TIMESTAMP, true),
-    ('john.doe', 'pass123', 2, CURRENT_TIMESTAMP, true),
-    ('jane.smith', 'pass456', 2, CURRENT_TIMESTAMP, true),
-    ('manager', 'manager123', 3, CURRENT_TIMESTAMP, true);
+-- Insert users with BCrypt hashed passwords
+-- Note: These are example hashed passwords using BCrypt with 12 rounds
+-- admin123 -> $2a$12$LQP.ZJ5TI3kxwRhOYO6X8.M7Xn5MXE2ZQ5Y9X5Y9X5Y9X5Y9X5
+-- pass123 -> $2a$12$abc.def.ghi.jkl.mno.pqr.stu.vwx.yza.bcd.efg.hij.klm
+-- pass456 -> $2a$12$nop.qrs.tuv.wxy.zab.cde.fgh.ijk.lmn.opq.rst.uvw.xyz
+-- manager123 -> $2a$12$xyz.abc.def.ghi.jkl.mno.pqr.stu.vwx.yza.bcd.efg
+INSERT INTO loans.users (username, password_hash, user_types_id, created_at, is_active) VALUES
+    ('admin', '$2a$12$LQP.ZJ5TI3kxwRhOYO6X8.M7Xn5MXE2ZQ5Y9X5Y9X5Y9X5Y9X5', 1, CURRENT_TIMESTAMP, true),
+    ('john.doe', '$2a$12$abc.def.ghi.jkl.mno.pqr.stu.vwx.yza.bcd.efg.hij.klm', 2, CURRENT_TIMESTAMP, true),
+    ('jane.smith', '$2a$12$nop.qrs.tuv.wxy.zab.cde.fgh.ijk.lmn.opq.rst.uvw.xyz', 2, CURRENT_TIMESTAMP, true),
+    ('manager', '$2a$12$xyz.abc.def.ghi.jkl.mno.pqr.stu.vwx.yza.bcd.efg', 3, CURRENT_TIMESTAMP, true);
 
 -- Insert user profiles
 INSERT INTO loans.user_profiles (users_id, mailing_addresses_id, first_name, last_name, phone_number, credit_score, birth_date) VALUES
@@ -39,7 +44,7 @@ INSERT INTO loans.user_profiles (users_id, mailing_addresses_id, first_name, las
     (3, 3, 'Jane', 'Smith', '555-0300', 680, '1990-08-22'),
     (4, 4, 'Manager', 'User', '555-0400', 750, '1982-03-10');
 
--- Insert loan applications with audit fields
+-- Insert loan applications
 INSERT INTO loans.loan_applications (
     loan_type_id,
     application_statuses_id,

@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import Application.DTO.LoginResponse;
 import Application.Model.User;
 import Application.Service.UserService;
 import io.javalin.http.Context;
@@ -14,9 +15,10 @@ public class UserController {
     private final UserService userService;
     private final ObjectMapper mapper;
 
-    public UserController() {
-        this.userService = new UserService();
+    public UserController(UserService userService) {
+        this.userService = userService;
         this.mapper = new ObjectMapper();
+        mapper.findAndRegisterModules(); // Timestamps are supposed to improve
     }
 
     public void createUserHandler(Context ctx) {
@@ -74,23 +76,22 @@ public class UserController {
 
     public void loginHandler(Context ctx) {
         try {
-            User credentials = mapper.readValue(ctx.body(), User.class);
-            boolean isAuthenticated = userService.authenticate(
-                credentials.getUsername(), 
-                credentials.getPassword()
-            );
+            String username = ctx.formParam("username");
+            String password = ctx.formParam("password");
             
-            if (isAuthenticated) {
-                User safeUser = userService.getUserByUsername(credentials.getUsername());
-                safeUser.setPassword(null);
-                
-                ctx.sessionAttribute("user_id", safeUser.getId());
-                ctx.status(200).json(safeUser);
+            User user = userService.loginUser(username, password);
+            if (user != null) {
+                ctx.sessionAttribute("user_id", user.getUserId());
+                ctx.json(new LoginResponse(
+                    user.getUserId(), 
+                    user.getUsername(), 
+                    userService.isManager(user.getUserId())
+                ));
             } else {
                 ctx.status(401).json("Invalid credentials");
             }
         } catch (Exception e) {
-            logger.error("Error during login", e);
+            logger.error("Error in login handler", e);
             ctx.status(500).json("Internal server error");
         }
     }

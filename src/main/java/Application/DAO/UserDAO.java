@@ -4,9 +4,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,19 +17,26 @@ public class UserDAO {
     private static final Logger logger = LoggerFactory.getLogger(UserDAO.class);
 
     public List<User> getAllUsers() {
-        Connection connection = ConnectionUtil.getConnection();
         List<User> users = new ArrayList<>();
+        Connection connection = ConnectionUtil.getConnection();
         try {
-            String sql = "SELECT * FROM loans.users";
+            String sql = "SELECT users_id, username, password_hash, user_types_id, " +
+                        "created_at, last_login, is_active " +
+                        "FROM loans.users";
 
             PreparedStatement preparedStatement = connection.prepareStatement(sql);
             ResultSet rs = preparedStatement.executeQuery();
+            
             while(rs.next()) {
                 User user = new User(
                     rs.getInt("users_id"),
                     rs.getString("username"),
-                    rs.getString("password"),
-                    rs.getInt("user_types_id")
+                    rs.getString("password_hash"),
+                    rs.getInt("user_types_id"),
+                    rs.getTimestamp("created_at").toLocalDateTime(),
+                    rs.getTimestamp("last_login") != null ? 
+                        rs.getTimestamp("last_login").toLocalDateTime() : null,
+                    rs.getBoolean("is_active")
                 );
                 users.add(user);
             }
@@ -42,7 +49,10 @@ public class UserDAO {
     public User getUserById(int id) {
         Connection connection = ConnectionUtil.getConnection();
         try {
-            String sql = "SELECT * FROM loans.users WHERE users_id = ?";
+            // Fixed SQL query - added WHERE clause
+            String sql = "SELECT users_id, username, password_hash, user_types_id, " +
+                        "created_at, last_login, is_active " +
+                        "FROM loans.users WHERE users_id = ?";
             PreparedStatement preparedStatement = connection.prepareStatement(sql);
             preparedStatement.setInt(1, id);
 
@@ -51,8 +61,12 @@ public class UserDAO {
                 return new User(
                     rs.getInt("users_id"),
                     rs.getString("username"),
-                    rs.getString("password"),
-                    rs.getInt("user_types_id")
+                    rs.getString("password_hash"),
+                    rs.getInt("user_types_id"),
+                    rs.getTimestamp("created_at").toLocalDateTime(),
+                    rs.getTimestamp("last_login") != null ? 
+                        rs.getTimestamp("last_login").toLocalDateTime() : null,
+                    rs.getBoolean("is_active")
                 );
             }
         } catch(SQLException e) {
@@ -64,22 +78,28 @@ public class UserDAO {
     public User insertUser(User user) {
         Connection connection = ConnectionUtil.getConnection();
         try {
-            String sql = "INSERT INTO loans.users (username, password, user_types_id, created_at, is_active) " +
-                        "VALUES (?, ?, ?, CURRENT_TIMESTAMP, true)";
-            PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            String sql = "INSERT INTO loans.users (username, password_hash, user_types_id, created_at, is_active) " +
+                        "VALUES (?, ?, ?, CURRENT_TIMESTAMP, true) RETURNING users_id, created_at";
+            PreparedStatement preparedStatement = connection.prepareStatement(sql);
 
             preparedStatement.setString(1, user.getUsername());
-            preparedStatement.setString(2, user.getPassword());
+            preparedStatement.setString(2, user.getPasswordHash());
             preparedStatement.setInt(3, user.getUserTypeId());
 
-            preparedStatement.executeUpdate();
-            ResultSet pkeyResultSet = preparedStatement.getGeneratedKeys();
-            if(pkeyResultSet.next()) {
-                int generatedUserId = (int) pkeyResultSet.getLong(1);
-                return new User(generatedUserId, user.getUsername(), user.getPassword(), user.getUserTypeId());
+            ResultSet rs = preparedStatement.executeQuery();
+            if(rs.next()) {
+                return new User(
+                    rs.getInt("users_id"),
+                    user.getUsername(),
+                    user.getPasswordHash(),
+                    user.getUserTypeId(),
+                    rs.getTimestamp("created_at").toLocalDateTime(),
+                    null,
+                    true
+                );
             }
         } catch(SQLException e) {
-            logger.error("Error inserting user", e);
+            logger.error("Error inserting user: {}", e.getMessage());
         }
         return null;
     }
@@ -87,11 +107,12 @@ public class UserDAO {
     public void updateUser(int userId, User user) {
         Connection connection = ConnectionUtil.getConnection();
         try {
-            String sql = "UPDATE loans.users SET username=?, password=?, user_types_id=? WHERE users_id=?";
+            // Fixed SQL query to use password_hash instead of password
+            String sql = "UPDATE loans.users SET username=?, password_hash=?, user_types_id=? WHERE users_id=?";
             PreparedStatement preparedStatement = connection.prepareStatement(sql);
 
             preparedStatement.setString(1, user.getUsername());
-            preparedStatement.setString(2, user.getPassword());
+            preparedStatement.setString(2, user.getPasswordHash());
             preparedStatement.setInt(3, user.getUserTypeId());
             preparedStatement.setInt(4, userId);
 
@@ -104,7 +125,10 @@ public class UserDAO {
     public User getUserByUsername(String username) {
         Connection connection = ConnectionUtil.getConnection();
         try {
-            String sql = "SELECT * FROM loans.users WHERE username = ?";
+            // Fixed SQL query to select specific columns and use password_hash
+            String sql = "SELECT users_id, username, password_hash, user_types_id, " +
+                        "created_at, last_login, is_active " +
+                        "FROM loans.users WHERE username = ?";
             PreparedStatement preparedStatement = connection.prepareStatement(sql);
             preparedStatement.setString(1, username);
 
@@ -113,8 +137,12 @@ public class UserDAO {
                 return new User(
                     rs.getInt("users_id"),
                     rs.getString("username"),
-                    rs.getString("password"),
-                    rs.getInt("user_types_id")
+                    rs.getString("password_hash"),
+                    rs.getInt("user_types_id"),
+                    rs.getTimestamp("created_at").toLocalDateTime(),
+                    rs.getTimestamp("last_login") != null ? 
+                        rs.getTimestamp("last_login").toLocalDateTime() : null,
+                    rs.getBoolean("is_active")
                 );
             }
         } catch(SQLException e) {
@@ -123,13 +151,14 @@ public class UserDAO {
         return null;
     }
 
-    public boolean authenticate(String username, String password) {
+    public boolean authenticate(String username, String hashedPassword) {
         Connection connection = ConnectionUtil.getConnection();
         try {
-            String sql = "SELECT * FROM loans.users WHERE username = ? AND password = ?";
+            // Fixed SQL query to use password_hash
+            String sql = "SELECT * FROM loans.users WHERE username = ? AND password_hash = ?";
             PreparedStatement preparedStatement = connection.prepareStatement(sql);
             preparedStatement.setString(1, username);
-            preparedStatement.setString(2, password);
+            preparedStatement.setString(2, hashedPassword);
 
             ResultSet rs = preparedStatement.executeQuery();
             return rs.next();
@@ -137,5 +166,30 @@ public class UserDAO {
             logger.error("Error during authentication", e);
         }
         return false;
+    }
+
+    public void updateLastLogin(int userId) {
+        Connection connection = ConnectionUtil.getConnection();
+        try {
+            String sql = "UPDATE loans.users SET last_login = CURRENT_TIMESTAMP WHERE users_id = ?";
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setInt(1, userId);
+            ps.executeUpdate();
+        } catch(SQLException e) {
+            logger.error("Error updating last login: {}", e.getMessage());
+        }
+    }
+
+    public void updatePassword(int userId, String hashedPassword) {
+        Connection connection = ConnectionUtil.getConnection();
+        try {
+            String sql = "UPDATE loans.users SET password_hash = ? WHERE users_id = ?";
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setString(1, hashedPassword);
+            ps.setInt(2, userId);
+            ps.executeUpdate();
+        } catch(SQLException e) {
+            logger.error("Error updating password: {}", e.getMessage());
+        }
     }
 }

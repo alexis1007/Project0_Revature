@@ -5,12 +5,14 @@ import Application.Controller.LoansController;
 import Application.Controller.MailingAddressController;
 import Application.Controller.UserController;
 import Application.Controller.UserProfilesController;
+import Application.Service.UserService;
 import io.javalin.Javalin;
 
 public class Application {
     public static void main(String[] args) {
-        // Remove AccountsController since we're using UserController
-        UserController userController = new UserController();
+        UserService userService = new UserService();
+        
+        UserController userController = new UserController(userService);
         UserProfilesController userProfilesController = new UserProfilesController();
         LoansController loansController = new LoansController();
         MailingAddressController mailingAddressController = new MailingAddressController();

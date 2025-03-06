@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS loans.loan_type (
 CREATE TABLE IF NOT EXISTS loans.users (
     users_id SERIAL PRIMARY KEY,
     username VARCHAR(45) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL, -- Aumentar longitud para hash
+    password_hash VARCHAR(255) NOT NULL, -- Aumentar longitud para hash
     user_types_id INTEGER NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     last_login TIMESTAMP,
