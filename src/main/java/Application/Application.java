@@ -43,20 +43,6 @@ public class Application {
             app.get("/users", userController::getAllUsersHandler);
             app.put("/users/{user_id}", userController::updateUserHandler);
 
-            /*
-            // User profiles routes
-            app.post("/profiles", userProfilesController::createProfileHandler);
-            app.get("/profiles/{profile_id}", userProfilesController::getProfileHandler);
-
-            // Loans routes
-            app.post("/loans", loansController::createLoanHandler);
-            app.get("/loans/{loan_id}", loansController::getLoanHandler);
-
-            // Mailing address routes
-            app.post("/addresses", mailingAddressController::createAddressHandler);
-            app.get("/addresses/{address_id}", mailingAddressController::getAddressHandler);
-            */
-
             // Loan Type routes
             app.get("/loan-types", loanTypeController::getAllLoanTypes);
             app.get("/loan-types/{id}", loanTypeController::getLoanTypeById);
@@ -68,6 +54,19 @@ public class Application {
             app.post("/addresses", mailingAddressController::createAddressHandler);
             app.put("/addresses/{id}", mailingAddressController::updateAddressHandler);
             app.delete("/addresses/{id}", mailingAddressController::deleteAddressHandler);
+
+            // User Profile routes
+            app.get("/profiles", userProfilesController::getAllProfilesHandler);
+            app.get("/profiles/{id}", userProfilesController::getProfileByIdHandler);
+            app.post("/profiles", userProfilesController::createProfileHandler);
+            app.put("/profiles/{id}", userProfilesController::updateProfileHandler);
+            app.delete("/profiles/{id}", userProfilesController::deleteProfileHandler);
+
+            // Loan routes
+            app.get("/loans", loansController::getAllLoansHandler);
+            app.get("/loans/{id}", loansController::getLoanByIdHandler);
+            app.post("/loans", loansController::createLoanHandler);
+            app.put("/loans/{id}/status", loansController::updateLoanStatusHandler);
         });
     }
 }
