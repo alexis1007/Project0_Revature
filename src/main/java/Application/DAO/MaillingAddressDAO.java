@@ -1,9 +1,9 @@
 package Application.DAO;
 
-import Application.Model.Account;
-import Application.Model.MailingAddress;
 
 import java.util.List;
+
+import Application.Model.MailingAddress;
 
 public class MaillingAddressDAO {
     private final String url;

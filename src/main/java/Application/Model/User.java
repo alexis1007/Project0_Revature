@@ -1,28 +1,30 @@
 package Application.Model;
 
-public class Account {
+public class User {
     private int id;
-    private String username;
+    private String username; 
     private String password;
-    private int accountType;
+    private int userTypeId;
 
-    public Account(){    }
-    public Account(int id, String username, String password, int accountType){
+    public User(){    }
+    public User(int id, String username, String password, int userTypeId){
         this.id = id;
         this.username = username;
         this.password = password;
-        this.accountType = accountType;
+        this.userTypeId = userTypeId;
     }
+
+     // Getters
     public int getId(){        return id;    }
     public String getUsername(){        return username;    }
     public String getPassword() {        return password;    }
-    public int getAccountType() {        return accountType;    }
+    public int getUserTypeId() { return userTypeId; }
 
-
+    // Setters
     public void setId(int id){        this.id = id;    }
     public void setUsername(String username){        this.username = username;    }
     public void setPassword(String password) {        this.password = password;    }
-    public void setAccountType(int accountType) {        this.accountType = accountType;    }
+    public void setUserTypeId(int userTypeId) { this.userTypeId = userTypeId; }
 
     @Override
     public String toString(){
@@ -30,7 +32,7 @@ public class Account {
                 "id=" +id+
                 ", user name='"+username+'\''+
                 ", password='"+password+'\''+
-                ", account type='"+accountType+'\''+
+                ", account type='"+userTypeId+'\''+
                 '}';
 
     }
