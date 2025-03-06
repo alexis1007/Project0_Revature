@@ -1,17 +1,17 @@
--- -----------------------------------------------------
--- Schema loans
--- -----------------------------------------------------
+
+-- Schema Creation
+
 DROP SCHEMA IF EXISTS loans CASCADE;
 CREATE SCHEMA loans;
 COMMENT ON SCHEMA loans IS 'Schema for loan management system';
 
--- Ensure the schema is set in the search path
+-- Set default schema
 SET search_path TO loans;
 
--- First: Tables with no dependencies
--- -----------------------------------------------------
--- Table loans.mailing_addresses
--- -----------------------------------------------------
+
+-- Base Tables (No Dependencies)
+
+-- Mailing Addresses: Stores physical address information
 CREATE TABLE IF NOT EXISTS loans.mailing_addresses (
     mailing_addresses_id SERIAL PRIMARY KEY,
     street VARCHAR(45) NOT NULL,
@@ -20,51 +20,54 @@ CREATE TABLE IF NOT EXISTS loans.mailing_addresses (
     zip VARCHAR(45) NOT NULL,
     country VARCHAR(45) NOT NULL
 );
--- -----------------------------------------------------
--- Table loans.account_types
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS loans.account_types (
-    account_types_id SERIAL PRIMARY KEY,
-    account_type VARCHAR(45) NOT NULL
-);
--- -----------------------------------------------------
--- Table loans.application_statuses
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS loans.application_statuses (
-    application_statuses_id SERIAL PRIMARY KEY,
-    application_statuses VARCHAR(10) NOT NULL
-);
--- -----------------------------------------------------
--- Table loans.loan_type
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS loans.loan_type (
-    loan_type_id SERIAL PRIMARY KEY,
-    loan_type VARCHAR(10) NOT NULL
+
+-- User Types: Defines user roles (ADMIN, USER, MANAGER)
+CREATE TABLE IF NOT EXISTS loans.user_types (
+    user_types_id SERIAL PRIMARY KEY,
+    user_type VARCHAR(45) NOT NULL UNIQUE
 );
 
--- Second: Tables with single dependencies
--- -----------------------------------------------------
--- Table loans.accounts
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS loans.accounts (
-    accounts_id SERIAL PRIMARY KEY,
-    username VARCHAR(45) NOT NULL,
-    password VARCHAR(45) NOT NULL,
-    account_types_id INTEGER NOT NULL,
-    CONSTRAINT fk_accounts_account_types
-        FOREIGN KEY (account_types_id)
-        REFERENCES loans.account_types (account_types_id)
-        ON DELETE CASCADE
+-- Application Statuses: Loan application status types
+CREATE TABLE IF NOT EXISTS loans.application_statuses (
+    application_statuses_id SERIAL PRIMARY KEY,
+    application_statuses VARCHAR(10) NOT NULL,
+    description VARCHAR(100),
+    CONSTRAINT unique_status UNIQUE (application_statuses)
+);
+
+-- Loan Types: Available types of loans
+CREATE TABLE IF NOT EXISTS loans.loan_type (
+    loan_type_id SERIAL PRIMARY KEY,
+    loan_type VARCHAR(10) NOT NULL,
+    CONSTRAINT unique_loan_type UNIQUE (loan_type)
+);
+
+
+-- Users and Profiles
+
+-- Users: Core user account information with authentication
+CREATE TABLE IF NOT EXISTS loans.users (
+    users_id SERIAL PRIMARY KEY,
+    username VARCHAR(45) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL, -- Aumentar longitud para hash
+    user_types_id INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_login TIMESTAMP,
+    is_active BOOLEAN DEFAULT TRUE,
+    CONSTRAINT fk_users_user_types
+        FOREIGN KEY (user_types_id)
+        REFERENCES loans.user_types (user_types_id)
+        ON DELETE RESTRICT -- Cambiar CASCADE a RESTRICT
         ON UPDATE CASCADE
 );
 
--- Third: Tables with multiple dependencies
--- -----------------------------------------------------
--- Table loans.user_profiles
--- -----------------------------------------------------
+
+-- Complex Tables (Multiple Dependencies)
+
+-- User Profiles: Extended user information
 CREATE TABLE IF NOT EXISTS loans.user_profiles (
     user_profiles_id SERIAL PRIMARY KEY,
-    accounts_id INTEGER NOT NULL,
+    users_id INTEGER NOT NULL,
     mailing_addresses_id INTEGER NOT NULL,
     first_name VARCHAR(45) NOT NULL,
     last_name VARCHAR(45) NOT NULL,
@@ -74,59 +77,140 @@ CREATE TABLE IF NOT EXISTS loans.user_profiles (
     CONSTRAINT fk_user_profiles_mailing_addresses
         FOREIGN KEY (mailing_addresses_id)
         REFERENCES loans.mailing_addresses (mailing_addresses_id)
+        ON DELETE RESTRICT
+        ON UPDATE CASCADE,
+    CONSTRAINT fk_user_profiles_users
+        FOREIGN KEY (users_id)
+        REFERENCES loans.users (users_id)
         ON DELETE CASCADE
         ON UPDATE CASCADE,
-    CONSTRAINT fk_user_profiles_accounts
-        FOREIGN KEY (accounts_id)
-        REFERENCES loans.accounts (accounts_id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
+    CONSTRAINT check_credit_score 
+        CHECK (credit_score >= 300 AND credit_score <= 850),
+    CONSTRAINT check_birth_date 
+        CHECK (birth_date <= CURRENT_DATE - INTERVAL '18 years')
 );
 
--- Fourth: Tables with most dependencies
--- -----------------------------------------------------
--- Table loans.loan_applications
--- -----------------------------------------------------
+
+-- Loan Applications
+
 CREATE TABLE IF NOT EXISTS loans.loan_applications (
     loan_applications_id SERIAL PRIMARY KEY,
     loan_type_id INTEGER NOT NULL,
     application_statuses_id INTEGER NOT NULL,
     user_profiles_id INTEGER NOT NULL,
-    principal_balance NUMERIC NOT NULL,
-    interest NUMERIC(10,2) NOT NULL,
+    principal_balance NUMERIC(10,2) NOT NULL,
+    interest NUMERIC(5,2) NOT NULL,
     term_length INTEGER NOT NULL,
-    total_balance NUMERIC NOT NULL,
+    total_balance NUMERIC(10,2) NOT NULL,
     borrower VARCHAR(45) NOT NULL,
-    application_date TIMESTAMP NOT NULL,
+    application_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_by INTEGER,
+    updated_at TIMESTAMP,
+    status_changed_by INTEGER,
+    status_changed_at TIMESTAMP,
     CONSTRAINT fk_loan_applications_loan_type
         FOREIGN KEY (loan_type_id)
         REFERENCES loans.loan_type (loan_type_id)
-        ON DELETE CASCADE
+        ON DELETE RESTRICT
         ON UPDATE CASCADE,
     CONSTRAINT fk_loan_applications_application_statuses
         FOREIGN KEY (application_statuses_id)
         REFERENCES loans.application_statuses (application_statuses_id)
-        ON DELETE CASCADE
+        ON DELETE RESTRICT
         ON UPDATE CASCADE,
     CONSTRAINT fk_loan_applications_user_profiles
         FOREIGN KEY (user_profiles_id)
         REFERENCES loans.user_profiles (user_profiles_id)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
+        ON DELETE RESTRICT
+        ON UPDATE CASCADE,
+    CONSTRAINT fk_loan_applications_created_by
+        FOREIGN KEY (created_by)
+        REFERENCES loans.users(users_id)
+        ON DELETE RESTRICT
+        ON UPDATE CASCADE,
+    CONSTRAINT fk_loan_applications_updated_by
+        FOREIGN KEY (updated_by)
+        REFERENCES loans.users(users_id)
+        ON DELETE RESTRICT
+        ON UPDATE CASCADE,
+    CONSTRAINT fk_loan_applications_status_changed_by
+        FOREIGN KEY (status_changed_by)
+        REFERENCES loans.users(users_id)
+        ON DELETE RESTRICT
+        ON UPDATE CASCADE,
+    CONSTRAINT check_positive_amounts 
+        CHECK (principal_balance > 0 AND interest >= 0 AND term_length > 0),
+    CONSTRAINT check_dates 
+        CHECK (application_date <= CURRENT_TIMESTAMP)
 );
 
--- Finally: Add indexes and constraints
-CREATE INDEX idx_accounts_username ON loans.accounts(username);
+-- Indexes for Performance Optimization
+
+-- User related indexes
+CREATE INDEX idx_users_username ON loans.users(username);
 CREATE INDEX idx_user_profiles_last_name ON loans.user_profiles(last_name);
+CREATE INDEX idx_user_profiles_user ON loans.user_profiles(users_id);
+
+-- Loan application related indexes
 CREATE INDEX idx_loan_applications_application_date ON loans.loan_applications(application_date);
+CREATE INDEX idx_loan_applications_status ON loans.loan_applications(application_statuses_id);
+CREATE INDEX idx_loan_applications_type ON loans.loan_applications(loan_type_id);
+CREATE INDEX idx_loan_applications_user ON loans.loan_applications(user_profiles_id);
 
-ALTER TABLE loans.user_profiles 
-    ADD CONSTRAINT check_credit_score 
-    CHECK (credit_score >= 300 AND credit_score <= 850);
+-- Audit Trail Configuration
 
-ALTER TABLE loans.loan_applications 
-    ADD CONSTRAINT check_positive_amounts 
-    CHECK (principal_balance > 0 AND interest >= 0 AND term_length > 0);
+-- Automatic timestamp update function
+CREATE OR REPLACE FUNCTION loans.update_timestamp()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
 
-COMMENT ON TABLE loans.accounts IS 'Stores user account credentials and types';
+-- Trigger for automatic timestamp updates
+CREATE TRIGGER update_loan_application_timestamp
+    BEFORE UPDATE ON loans.loan_applications
+    FOR EACH ROW
+    EXECUTE FUNCTION loans.update_timestamp();
+
+COMMIT;
+
+
+-- Documentation
+
+COMMENT ON TABLE loans.users IS 'Stores user credentials and types';
 COMMENT ON TABLE loans.loan_applications IS 'Stores loan application details and status';
+
+
+-- Verification Queries
+
+-- Schema structure verification
+SELECT table_name, column_name, data_type, character_maximum_length
+FROM information_schema.columns
+WHERE table_schema = 'loans'
+ORDER BY table_name, ordinal_position;
+
+-- Constraint verification
+SELECT tc.table_schema, tc.table_name, tc.constraint_name, tc.constraint_type
+FROM information_schema.table_constraints tc
+WHERE tc.table_schema = 'loans';
+
+-- Index verification
+SELECT schemaname, tablename, indexname
+FROM pg_indexes
+WHERE schemaname = 'loans';
+
+-- Verify creation
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT FROM pg_catalog.pg_tables 
+        WHERE schemaname = 'loans' 
+        AND tablename = 'loan_applications'
+    ) THEN
+        RAISE EXCEPTION 'Database creation failed';
+    END IF;
+END $$;
