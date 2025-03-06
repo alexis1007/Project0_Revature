@@ -1,76 +1,97 @@
-# Project0 Revature
+# Project0 Revature - Loan Management System
 
 ## Description
-Project0 Revature is a Java-based banking application developed during the Revature training program. The application implements core banking functionalities including account management, transactions, and user authentication.
+Project0 Revature is a Java-based banking application developed during the Revature training program. The application implements core banking functionalities including account management, loan processing, and user authentication.
 
 ## Features
 - User registration and authentication
-- Account creation and management
-- Deposit and withdrawal operations
-- Transaction history tracking
-- Administrative controls
+- Role-based access control (User/Manager)
+- Loan application management
+- Profile management
 - Data persistence using PostgreSQL
-- JUnit testing implementation
+- Session-based authentication
+- Comprehensive logging system
 
 ## Technical Stack
-- Java 8+
+- Java 17
 - PostgreSQL
 - JDBC
-- JUnit 5
-- Log4j
+- Javalin (REST API)
+- JUnit 5 (Testing)
+- Logback (Logging)
 - Maven
-
-## Installation
-To install and set up this project, follow these steps:
-1. Clone the repository:
-    ```bash
-    git clone https://github.com/alexi/Project0_revature.git
-    ```
-2. Navigate to the project directory:
-    ```bash
-    cd Project0_revature
-    ```
-3. Ensure you have PostgreSQL installed and running
-4. Configure database connection in `src/main/resources/application.properties`
-5. Run Maven install:
-    ```bash
-    mvn clean install
-    ```
-
-## Usage
-1. Start the application:
-    ```bash
-    mvn exec:java -Dexec.mainClass="com.revature.Main"
-    ```
-2. Follow the console prompts to:
-   - Create a new account
-   - Log in to existing account
-   - Perform banking operations
-   - View transaction history
-
-## Testing
-Run the test suite using:
-```bash
-mvn test
-```
 
 ## Project Structure
 ```
 src/
 ├── main/
 │   ├── java/
-│   │   └── com/
-│   │       └── revature/
-│   │           ├── models/
-│   │           ├── dao/
-│   │           ├── service/
-│   │           └── util/
+│   │   └── Application/
+│   │       ├── Controller/
+│   │       ├── Service/
+│   │       ├── DAO/
+│   │       ├── Model/
+│   │       └── Util/
 │   └── resources/
+│       └── logback.xml
 └── test/
     └── java/
-        └── com/
-            └── revature/
+        └── Application/
 ```
 
+## Installation
+1. Clone the repository:
+```bash
+git clone https://github.com/alexi/Project0_revature.git
+```
+
+2. Configure PostgreSQL:
+   - Create a database
+   - Run the schema scripts in `/Database Model/`
+   - Update database credentials in `src/main/resources/application.properties`
+
+3. Build the project:
+```bash
+mvn clean install
+```
+
+## Running the Application
+```bash
+mvn exec:java -Dexec.mainClass="Application.Application"
+```
+
+## Testing
+Run the test suite:
+```bash
+mvn test
+```
+
+## Logging
+The application uses Logback for logging with the following levels:
+- INFO: Normal application flow (login, transactions)
+- WARN: Suspicious activities (invalid attempts)
+- ERROR: System errors and exceptions
+
+Logs are written to:
+- Console
+- `logs/application.log`
+
+Configuration can be found in `src/main/resources/logback.xml`
+
+## API Endpoints
+- POST `/auth/login` - User authentication
+- POST `/auth/register` - New user registration
+- GET `/accounts/{id}` - Get account details
+- POST `/loans` - Create loan application
+- GET `/loans` - View loans (all for managers, own for users)
+- PUT `/loans/{id}/approve` - Approve loan (managers only)
+
+## Contributing
+1. Fork the repository
+2. Create a feature branch
+3. Commit changes
+4. Push to the branch
+5. Create a Pull Request
+
 ## License
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
+This project is licensed under the MIT License.
