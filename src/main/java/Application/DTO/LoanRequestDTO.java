@@ -27,5 +27,13 @@ public class LoanRequestDTO {
 
     public String getBorrower() { return borrower; }
     public void setBorrower(String borrower) { this.borrower = borrower; }
+
+    public boolean isValid() {
+        return loanTypeId != null && 
+               amount != null && amount.compareTo(BigDecimal.ZERO) > 0 &&
+               interest != null && interest.compareTo(BigDecimal.ZERO) >= 0 &&
+               termMonths != null && termMonths > 0 &&
+               borrower != null && !borrower.trim().isEmpty();
+    }
 }
 

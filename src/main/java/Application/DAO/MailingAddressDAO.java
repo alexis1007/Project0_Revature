@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -68,10 +67,12 @@ public class MailingAddressDAO {
     public MailingAddress createMailingAddress(MailingAddress address) {
         Connection conn = ConnectionUtil.getConnection();
         try {
+            // Modificar la consulta para usar SERIAL y dejar que la base de datos asigne el ID
             String sql = "INSERT INTO loans.mailing_addresses (street, city, state, zip, country) " +
-                        "VALUES (?, ?, ?, ?, ?) RETURNING mailing_addresses_id";
-            PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+                        "VALUES (?, ?, ?, ?, ?) " +
+                        "RETURNING mailing_addresses_id, street, city, state, zip, country";
             
+            PreparedStatement ps = conn.prepareStatement(sql);
             ps.setString(1, address.getStreet());
             ps.setString(2, address.getCity());
             ps.setString(3, address.getState());
@@ -80,17 +81,20 @@ public class MailingAddressDAO {
 
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
-                return new MailingAddress(
-                    rs.getInt(1),
-                    address.getStreet(),
-                    address.getCity(),
-                    address.getState(),
-                    address.getZip(),
-                    address.getCountry()
+                MailingAddress created = new MailingAddress(
+                    rs.getInt("mailing_addresses_id"),
+                    rs.getString("street"),
+                    rs.getString("city"),
+                    rs.getString("state"),
+                    rs.getString("zip"),
+                    rs.getString("country")
                 );
+                logger.info("Created mailing address with ID: {}", created.getMailingAddressId());
+                return created;
             }
         } catch (SQLException e) {
-            logger.error("Error creating mailing address", e);
+            logger.error("Error creating mailing address: {}", e.getMessage());
+            throw new RuntimeException("Error creating mailing address", e);
         }
         return null;
     }

@@ -67,6 +67,11 @@ public class LoansController {
             Integer userId = ctx.sessionAttribute("user_id");
             LoanRequestDTO request = ctx.bodyAsClass(LoanRequestDTO.class);
             
+            if (!request.isValid()) {
+                ctx.status(400).json("Invalid loan data");
+                return;
+            }
+            
             // Convertir DTO a modelo
             LoanApplication loan = new LoanApplication();
             loan.setLoanTypeId(request.getLoanTypeId());
@@ -75,6 +80,8 @@ public class LoansController {
             loan.setTermLength(request.getTermMonths());
             loan.setBorrower(request.getBorrower()); 
             loan.setCreatedBy(userId);
+            loan.setApplicationStatusId(1); // 1 = DRAFT status
+            loan.setUserProfileId(userId);  // Asociar con el perfil del usuario
             
             LoanApplication created = loanService.createLoan(loan);
             if (created != null) {

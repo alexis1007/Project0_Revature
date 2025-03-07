@@ -53,9 +53,17 @@ public class LoanResponseDTO {
         if (ValidationUtils.isValidLoanAmount(amount) && 
             ValidationUtils.isValidInterestRate(interest) && 
             termMonths > 0) {
-            BigDecimal monthlyRate = interest.divide(BigDecimal.valueOf(1200));
+            
+            // División con escala y modo de redondeo
+            BigDecimal monthlyRate = interest.divide(BigDecimal.valueOf(1200), 10, RoundingMode.HALF_UP);
+            
+            // Calcular (1 + r)^n
             BigDecimal factor = BigDecimal.ONE.add(monthlyRate).pow(termMonths);
-            this.monthlyPayment = amount.multiply(monthlyRate).multiply(factor)
+            
+            // Calcular P * r * (1 + r)^n / ((1 + r)^n - 1)
+            this.monthlyPayment = amount
+                .multiply(monthlyRate)
+                .multiply(factor)
                 .divide(factor.subtract(BigDecimal.ONE), 2, RoundingMode.HALF_UP);
         }
     }

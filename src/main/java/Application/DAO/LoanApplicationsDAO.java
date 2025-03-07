@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
@@ -77,13 +76,14 @@ public class LoanApplicationsDAO {
     public LoanApplication createLoan(LoanApplication loan) {
         Connection conn = ConnectionUtil.getConnection();
         try {
-            String sql = "INSERT INTO loans.loan_applications (loan_type_id, application_statuses_id, " +
-                        "user_profiles_id, principal_balance, interest, term_length, total_balance, " +
+            String sql = "INSERT INTO loans.loan_applications " +
+                        "(loan_type_id, application_statuses_id, user_profiles_id, " +
+                        "principal_balance, interest, term_length, total_balance, " +
                         "borrower, application_date, created_by, created_at) " +
                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?, CURRENT_TIMESTAMP) " +
-                        "RETURNING loan_applications_id";
+                        "RETURNING *";
             
-            PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, loan.getLoanTypeId());
             ps.setInt(2, loan.getApplicationStatusId());
             ps.setInt(3, loan.getUserProfileId());
@@ -95,14 +95,16 @@ public class LoanApplicationsDAO {
             ps.setInt(9, loan.getCreatedBy());
 
             ResultSet rs = ps.executeQuery();
-            if(rs.next()) {
-                loan.setLoanApplicationId(rs.getInt(1));
-                return loan;
+            if (rs.next()) {
+                return mapResultSetToLoanApplication(rs);
+            } else {
+                logger.error("No rows returned after insert");
+                throw new RuntimeException("Failed to create loan application");
             }
-        } catch(SQLException e) {
-            logger.error("Error creating loan", e);
+        } catch (SQLException e) {
+            logger.error("Error creating loan: {}", e.getMessage());
+            throw new RuntimeException("Error creating loan", e);
         }
-        return null;
     }
 
     public void updateLoanStatus(int loanId, int statusId, int userId) {
