@@ -1,10 +1,12 @@
 package Application.Controller;
 
+import org.mindrot.jbcrypt.BCrypt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import Application.DTO.LoginRequest;
 import Application.DTO.LoginResponse;
 import Application.Model.User;
 import Application.Service.UserService;
@@ -62,11 +64,17 @@ public class UserController {
             User user = mapper.readValue(ctx.body(), User.class);
             int userId = Integer.parseInt(ctx.pathParam("user_id"));
             
+            // Hash the new password if provided
+            if (user.getPassword() != null && !user.getPassword().isEmpty()) {
+                String hashedPassword = BCrypt.hashpw(user.getPassword(), BCrypt.gensalt(12));
+                user.setPasswordHash(hashedPassword);
+            }
+            
             User updatedUser = userService.updateUser(userId, user);
             if (updatedUser == null) {
-                ctx.status(400);
+                ctx.status(400).json("Could not update user");
             } else {
-                ctx.json(mapper.writeValueAsString(updatedUser));
+                ctx.json(updatedUser);
             }
         } catch (Exception e) {
             logger.error("Error updating user", e);
@@ -76,8 +84,12 @@ public class UserController {
 
     public void loginHandler(Context ctx) {
         try {
-            String username = ctx.formParam("username");
-            String password = ctx.formParam("password");
+            LoginRequest loginRequest = ctx.bodyAsClass(LoginRequest.class);
+            String username = loginRequest.getUsername();
+            String password = loginRequest.getPassword();
+
+            System.out.println(username);
+            
             
             User user = userService.loginUser(username, password);
             if (user != null) {
@@ -92,6 +104,41 @@ public class UserController {
             }
         } catch (Exception e) {
             logger.error("Error in login handler", e);
+            ctx.status(500).json("Internal server error");
+        }
+    }
+
+    public void logoutHandler(Context ctx) {
+        try {
+            ctx.sessionAttribute("user_id", null);
+            ctx.sessionAttribute("is_manager", null);
+            ctx.json("Logged out successfully");
+        } catch (Exception e) {
+            logger.error("Error during logout", e);
+            ctx.status(500).json("Internal server error");
+        }
+    }
+
+    public void deleteUserHandler(Context ctx) {
+        try {
+            Integer currentUserId = ctx.sessionAttribute("user_id");
+            if (currentUserId == null) {
+                ctx.status(401).json("Unauthorized");
+                return;
+            }
+
+            int userIdToDelete = Integer.parseInt(ctx.pathParam("user_id"));
+            
+            // Only allow managers or self-deletion
+            if (!userService.isManager(currentUserId) && currentUserId != userIdToDelete) {
+                ctx.status(403).json("Forbidden: Can only delete own account or requires manager privileges");
+                return;
+            }
+
+            userService.deleteUser(userIdToDelete);
+            ctx.status(204).json("User deleted successfully");
+        } catch (Exception e) {
+            logger.error("Error deleting user", e);
             ctx.status(500).json("Internal server error");
         }
     }

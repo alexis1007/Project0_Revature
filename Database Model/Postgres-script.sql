@@ -1,4 +1,3 @@
-
 -- Schema Creation
 
 DROP SCHEMA IF EXISTS loans CASCADE;
@@ -20,6 +19,17 @@ CREATE TABLE IF NOT EXISTS loans.mailing_addresses (
     zip VARCHAR(45) NOT NULL,
     country VARCHAR(45) NOT NULL
 );
+
+-- Add constraint to prevent deletion of default address
+ALTER TABLE loans.mailing_addresses
+    ADD CONSTRAINT protect_default_address 
+    CHECK (mailing_addresses_id != 1 OR (
+        street = 'Default Street' AND
+        city = 'Default City' AND
+        state = 'DC' AND
+        zip = '00000' AND
+        country = 'USA'
+    ));
 
 -- User Types: Defines user roles (ADMIN, USER, MANAGER)
 CREATE TABLE IF NOT EXISTS loans.user_types (
@@ -60,7 +70,6 @@ CREATE TABLE IF NOT EXISTS loans.users (
         ON DELETE RESTRICT -- Cambiar CASCADE a RESTRICT
         ON UPDATE CASCADE
 );
-
 
 -- Complex Tables (Multiple Dependencies)
 
@@ -128,8 +137,7 @@ CREATE TABLE IF NOT EXISTS loans.loan_applications (
     CONSTRAINT fk_loan_applications_created_by
         FOREIGN KEY (created_by)
         REFERENCES loans.users(users_id)
-        ON DELETE RESTRICT
-        ON UPDATE CASCADE,
+        ON DELETE CASCADE,
     CONSTRAINT fk_loan_applications_updated_by
         FOREIGN KEY (updated_by)
         REFERENCES loans.users(users_id)
@@ -175,6 +183,22 @@ CREATE TRIGGER update_loan_application_timestamp
     BEFORE UPDATE ON loans.loan_applications
     FOR EACH ROW
     EXECUTE FUNCTION loans.update_timestamp();
+
+-- Add cascade delete for user profiles when user is deleted
+ALTER TABLE loans.user_profiles
+    DROP CONSTRAINT IF EXISTS fk_user_profiles_users,
+    ADD CONSTRAINT fk_user_profiles_users
+        FOREIGN KEY (users_id)
+        REFERENCES loans.users (users_id)
+        ON DELETE CASCADE;
+
+-- Add cascade delete for loan applications when user is deleted
+ALTER TABLE loans.loan_applications
+    DROP CONSTRAINT IF EXISTS fk_loan_applications_created_by,
+    ADD CONSTRAINT fk_loan_applications_created_by
+        FOREIGN KEY (created_by)
+        REFERENCES loans.users (users_id)
+        ON DELETE CASCADE;
 
 COMMIT;
 

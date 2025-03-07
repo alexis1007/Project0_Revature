@@ -1,7 +1,6 @@
 package Application.DAO;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -19,19 +18,13 @@ import Application.Util.ConnectionUtil;
 public class LoanApplicationsDAO {
     private static final Logger logger = LoggerFactory.getLogger(LoanApplicationsDAO.class);
 
-    private final String url;
-    private final String dbUser;
-    private final String dbPassword;
-
-    public LoanApplicationsDAO(String url, String dbUser, String dbPassword) {
-        this.url = url;
-        this.dbUser = dbUser;
-        this.dbPassword = dbPassword;
+    public LoanApplicationsDAO() {
     }
 
     public List<LoanApplication> getAllLoans() {
         List<LoanApplication> loans = new ArrayList<>();
         Connection conn = ConnectionUtil.getConnection();
+        //System.out.println(" x");
         try {
             String sql = "SELECT * FROM loans.loan_applications";
             PreparedStatement ps = conn.prepareStatement(sql);
@@ -129,6 +122,44 @@ public class LoanApplicationsDAO {
         }
     }
 
+    public LoanApplication updateLoan(LoanApplication loan) {
+        Connection conn = ConnectionUtil.getConnection();
+        try {
+            String sql = "UPDATE loans.loan_applications SET " +
+                "loan_type_id = ?, " +
+                "principal_balance = ?, " +
+                "interest = ?, " +
+                "term_length = ?, " +
+                "total_balance = ?, " +
+                "borrower = ?, " +
+                "updated_at = CURRENT_TIMESTAMP, " +
+                "updated_by = ? " +
+                "WHERE loan_applications_id = ? " +
+                "RETURNING *";
+
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, loan.getLoanTypeId());
+            ps.setBigDecimal(2, loan.getPrincipalBalance());
+            ps.setBigDecimal(3, loan.getInterest());
+            ps.setInt(4, loan.getTermLength());
+            ps.setBigDecimal(5, loan.getTotalBalance());
+            ps.setString(6, loan.getBorrower());
+            ps.setInt(7, loan.getCreatedBy());
+            ps.setInt(8, loan.getLoanApplicationId());
+
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return mapResultSetToLoanApplication(rs);
+            }
+            
+            logger.info("Loan updated successfully: {}", loan.getLoanApplicationId());
+            return loan;
+        } catch (SQLException e) {
+            logger.error("Error updating loan: {}", e.getMessage());
+            throw new RuntimeException("Error updating loan", e);
+        }
+    }
+
     private LoanApplication mapResultSetToLoanApplication(ResultSet rs) throws SQLException {
         return new LoanApplication(
             rs.getInt("loan_applications_id"),
@@ -152,14 +183,23 @@ public class LoanApplicationsDAO {
         );
     }
 
-    public void deleteLoanApplication(){
-        String sql = "DELETE FROM loan_applications WHERE id = ?;";
-        try (Connection conn = DriverManager.getConnection(url,dbUser,dbPassword);
-             PreparedStatement stmt = conn.prepareStatement(sql)){
-            //stmt.setInt();
-            //stmt.executeUpdate();
-        }catch (SQLException e){
-            e.printStackTrace();
+    public void deleteLoanApplication(int loanId) {
+        Connection conn = ConnectionUtil.getConnection();
+        try {
+            String sql = "DELETE FROM loans.loan_applications WHERE loan_applications_id = ?";
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, loanId);
+            int rowsAffected = ps.executeUpdate();
+            
+            if (rowsAffected == 0) {
+                logger.warn("No loan found to delete with ID: {}", loanId);
+                throw new RuntimeException("Loan not found");
+            }
+            
+            logger.info("Loan application deleted successfully: {}", loanId);
+        } catch (SQLException e) {
+            logger.error("Error deleting loan application: {}", e.getMessage());
+            throw new RuntimeException("Error deleting loan application", e);
         }
     }
 }

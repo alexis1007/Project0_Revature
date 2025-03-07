@@ -1,7 +1,8 @@
 package Application.Model;
 
 import java.time.LocalDateTime;
-//import com.fasterxml.jackson.annotation.JsonProperty;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 //import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class User {
@@ -17,7 +18,9 @@ public class User {
     private int userTypeId;
     private LocalDateTime createdAt;
     private LocalDateTime lastLogin;
-    private boolean isActive;
+    
+    @JsonProperty("isActive")
+    private boolean active;
 
     // Default constructor
     public User() {}
@@ -27,20 +30,20 @@ public class User {
         this.username = username;
         this.passwordHash = passwordHash;
         this.userTypeId = userTypeId;
-        this.isActive = true;
+        this.active = true;
         this.createdAt = LocalDateTime.now();
     }
 
     // Full constructor
     public User(int userId, String username, String passwordHash, int userTypeId,
-                LocalDateTime createdAt, LocalDateTime lastLogin, boolean isActive) {
+                LocalDateTime createdAt, LocalDateTime lastLogin, boolean active) {
         this.userId = userId;
         this.username = username;
         this.passwordHash = passwordHash;
         this.userTypeId = userTypeId;
         this.createdAt = createdAt;
         this.lastLogin = lastLogin;
-        this.isActive = isActive;
+        this.active = active;
     }
 
     // Getters and setters
@@ -62,8 +65,10 @@ public class User {
     public LocalDateTime getLastLogin() { return lastLogin; }
     public void setLastLogin(LocalDateTime lastLogin) { this.lastLogin = lastLogin; }
     
-    public boolean isActive() { return isActive; }
-    public void setActive(boolean active) { isActive = active; }
+    @JsonProperty("isActive")
+    public boolean isActive() { return active; }
+    @JsonProperty("isActive")
+    public void setActive(boolean active) { this.active = active; }
 
     // Add new getter/setter for password
     public String getPassword() { return password; }

@@ -107,18 +107,20 @@ public class UserDAO {
     public void updateUser(int userId, User user) {
         Connection connection = ConnectionUtil.getConnection();
         try {
-            // Fixed SQL query to use password_hash instead of password
-            String sql = "UPDATE loans.users SET username=?, password_hash=?, user_types_id=? WHERE users_id=?";
-            PreparedStatement preparedStatement = connection.prepareStatement(sql);
-
-            preparedStatement.setString(1, user.getUsername());
-            preparedStatement.setString(2, user.getPasswordHash());
-            preparedStatement.setInt(3, user.getUserTypeId());
-            preparedStatement.setInt(4, userId);
-
-            preparedStatement.executeUpdate();
+            String sql = "UPDATE loans.users SET username=?, password_hash=COALESCE(?, password_hash), " +
+                        "user_types_id=?, is_active=? WHERE users_id=?";
+            PreparedStatement ps = connection.prepareStatement(sql);
+            
+            ps.setString(1, user.getUsername());
+            ps.setString(2, user.getPasswordHash());
+            ps.setInt(3, user.getUserTypeId());
+            ps.setBoolean(4, user.isActive());
+            ps.setInt(5, userId);
+            
+            ps.executeUpdate();
         } catch(SQLException e) {
             logger.error("Error updating user", e);
+            throw new RuntimeException("Error updating user", e);
         }
     }
 
@@ -190,6 +192,24 @@ public class UserDAO {
             ps.executeUpdate();
         } catch(SQLException e) {
             logger.error("Error updating password: {}", e.getMessage());
+        }
+    }
+
+    public void deleteUser(int userId) {
+        Connection connection = ConnectionUtil.getConnection();
+        try {
+            String sql = "DELETE FROM loans.users WHERE users_id = ?";
+            PreparedStatement ps = connection.prepareStatement(sql);
+            ps.setInt(1, userId);
+            int rowsAffected = ps.executeUpdate();
+            if (rowsAffected > 0) {
+                logger.info("User deleted successfully: {}", userId);
+            } else {
+                logger.warn("No user found to delete with ID: {}", userId);
+            }
+        } catch (SQLException e) {
+            logger.error("Error deleting user: {}", e.getMessage());
+            throw new RuntimeException("Error deleting user", e);
         }
     }
 }

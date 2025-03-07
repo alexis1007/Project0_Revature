@@ -6,10 +6,12 @@ INSERT INTO loans.user_types (user_type) VALUES
 
 -- Insert application statuses with descriptions
 INSERT INTO loans.application_statuses (application_statuses, description) VALUES
+    ('DRAFT', 'Application is in draft state'),
     ('PENDING', 'Application is awaiting review'),
+    ('REVIEW', 'Application needs additional review'),
     ('APPROVED', 'Application has been approved'),
     ('REJECTED', 'Application has been rejected'),
-    ('REVIEW', 'Application needs additional review');
+    ('CANCELLED', 'Application has been cancelled');
 
 -- Insert loan types
 INSERT INTO loans.loan_type (loan_type) VALUES
@@ -19,24 +21,25 @@ INSERT INTO loans.loan_type (loan_type) VALUES
     ('BUSINESS');
 
 -- Insert mailing addresses
-INSERT INTO loans.mailing_addresses (street, city, state, zip, country) VALUES
-    ('123 Main St', 'New York', 'NY', '10001', 'USA'),
-    ('456 Oak Ave', 'Los Angeles', 'CA', '90001', 'USA'),
-    ('789 Pine Rd', 'Chicago', 'IL', '60601', 'USA'),
-    ('321 Maple Dr', 'Houston', 'TX', '77001', 'USA');
+INSERT INTO loans.mailing_addresses (mailing_addresses_id, street, city, state, zip, country) VALUES
+    (1, 'Default Street', 'Default City', 'DC', '00000', 'USA'),
+    (2, '123 Main St', 'New York', 'NY', '10001', 'USA'),
+    (3, '456 Oak Ave', 'Los Angeles', 'CA', '90001', 'USA'),
+    (4, '789 Pine Rd', 'Chicago', 'IL', '60601', 'USA'),
+    (5, '321 Maple Dr', 'Houston', 'TX', '77001', 'USA');
 
 -- Insert users with BCrypt hashed passwords
--- Note: These are example hashed passwords using BCrypt with 12 rounds
--- admin123 -> $2a$12$LQP.ZJ5TI3kxwRhOYO6X8.M7Xn5MXE2ZQ5Y9X5Y9X5Y9X5Y9X5
--- pass123 -> $2a$12$abc.def.ghi.jkl.mno.pqr.stu.vwx.yza.bcd.efg.hij.klm
--- pass456 -> $2a$12$nop.qrs.tuv.wxy.zab.cde.fgh.ijk.lmn.opq.rst.uvw.xyz
--- manager123 -> $2a$12$xyz.abc.def.ghi.jkl.mno.pqr.stu.vwx.yza.bcd.efg
-INSERT INTO loans.users (username, password_hash, user_types_id, created_at, is_active) VALUES
-    ('admin', '$2a$12$LQP.ZJ5TI3kxwRhOYO6X8.M7Xn5MXE2ZQ5Y9X5Y9X5Y9X5Y9X5', 1, CURRENT_TIMESTAMP, true),
-    ('john.doe', '$2a$12$abc.def.ghi.jkl.mno.pqr.stu.vwx.yza.bcd.efg.hij.klm', 2, CURRENT_TIMESTAMP, true),
-    ('jane.smith', '$2a$12$nop.qrs.tuv.wxy.zab.cde.fgh.ijk.lmn.opq.rst.uvw.xyz', 2, CURRENT_TIMESTAMP, true),
-    ('manager', '$2a$12$xyz.abc.def.ghi.jkl.mno.pqr.stu.vwx.yza.bcd.efg', 3, CURRENT_TIMESTAMP, true);
+-- Note: These are actual BCrypt hashed passwords using 12 rounds
+-- admin123 -> $2a$12$nBcUaGo.roXONP46oxCbM.4FoGDYhgHcuRwleECzyE1SCn6yb0CYC
+-- pass123 -> $2a$12$pS1GJZx4mpqGEjrHySfkseqdyEqVaCfLseAws80mMHULBU/qVKYL2
+-- pass456 -> $2a$12$nAY1MqDAUuFhggJuade8fOVRNyWbmGleFYf/hXpF2NvUHR5dDTpGy
+-- manager123 -> $2a$12$7MQZXvGgcbRsxJCUcTXBZ.W2LAXt9jUUG8RHuo.ON4JzsWu5B6t1.
 
+INSERT INTO loans.users (username, password_hash, user_types_id, created_at, is_active) VALUES
+    ('admin', '$2a$12$nBcUaGo.roXONP46oxCbM.4FoGDYhgHcuRwleECzyE1SCn6yb0CYC', 1, CURRENT_TIMESTAMP, true),
+    ('john.doe', '$2a$12$pS1GJZx4mpqGEjrHySfkseqdyEqVaCfLseAws80mMHULBU/qVKYL2', 2, CURRENT_TIMESTAMP, true),
+    ('jane.smith', '$2a$12$nAY1MqDAUuFhggJuade8fOVRNyWbmGleFYf/hXpF2NvUHR5dDTpGy', 2, CURRENT_TIMESTAMP, true),
+    ('manager', '$2a$12$7MQZXvGgcbRsxJCUcTXBZ.W2LAXt9jUUG8RHuo.ON4JzsWu5B6t1.', 3, CURRENT_TIMESTAMP, true);
 -- Insert user profiles
 INSERT INTO loans.user_profiles (users_id, mailing_addresses_id, first_name, last_name, phone_number, credit_score, birth_date) VALUES
     (1, 1, 'Admin', 'User', '555-0100', 800, '1980-01-01'),

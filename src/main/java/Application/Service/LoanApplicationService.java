@@ -14,7 +14,7 @@ public class LoanApplicationService {
     private final LoanApplicationsDAO loanApplicationsDAO;
 
     public LoanApplicationService() {
-        this.loanApplicationsDAO = new LoanApplicationsDAO("jdbc:postgresql://localhost:5432/postgres", "postgres", "password");
+        this.loanApplicationsDAO = new LoanApplicationsDAO();
     }
 
     public LoanApplicationService(LoanApplicationsDAO loanApplicationsDAO) {
@@ -48,8 +48,79 @@ public class LoanApplicationService {
         return null;
     }
 
+    public LoanApplication updateLoan(LoanApplication loan) {
+        try {
+            if (!isValidLoan(loan)) {
+                logger.warn("Invalid loan data for update");
+                return null;
+            }
+
+            // Recalculate total balance
+            BigDecimal totalBalance = calculateTotalBalance(
+                loan.getPrincipalBalance(), 
+                loan.getInterest(), 
+                loan.getTermLength()
+            );
+            loan.setTotalBalance(totalBalance);
+            
+            return loanApplicationsDAO.updateLoan(loan);
+        } catch (Exception e) {
+            logger.error("Error updating loan", e);
+            throw new RuntimeException("Error updating loan", e);
+        }
+    }
+
     public void updateLoanStatus(int loanId, int statusId, int userId) {
         loanApplicationsDAO.updateLoanStatus(loanId, statusId, userId);
+    }
+
+    public void approveLoan(int loanId, int managerId) {
+        try {
+            // Status ID 4 es para APPROVED en la base de datos
+            loanApplicationsDAO.updateLoanStatus(loanId, 4, managerId);
+            logger.info("Loan {} approved by manager {}", loanId, managerId);
+        } catch (Exception e) {
+            logger.error("Error approving loan", e);
+            throw new RuntimeException("Error approving loan", e);
+        }
+    }
+
+    public void rejectLoan(int loanId, int managerId) {
+        try {
+            // Status ID 5 es para REJECTED en la base de datos
+            loanApplicationsDAO.updateLoanStatus(loanId, 5, managerId);
+            logger.info("Loan {} rejected by manager {}", loanId, managerId);
+        } catch (Exception e) {
+            logger.error("Error rejecting loan", e);
+            throw new RuntimeException("Error rejecting loan", e);
+        }
+    }
+
+    public void reviewLoan(int loanId, int managerId) {
+        try {
+            // Status ID 3 es para REVIEW en la base de datos
+            loanApplicationsDAO.updateLoanStatus(loanId, 3, managerId);
+            logger.info("Loan {} marked for review by manager {}", loanId, managerId);
+        } catch (Exception e) {
+            logger.error("Error marking loan for review", e);
+            throw new RuntimeException("Error marking loan for review", e);
+        }
+    }
+
+    public void deleteLoan(int loanId) {
+        try {
+            LoanApplication loan = getLoanById(loanId);
+            if (loan != null) {
+                loanApplicationsDAO.deleteLoanApplication(loanId);
+                logger.info("Loan {} deleted successfully", loanId);
+            } else {
+                logger.warn("Attempted to delete non-existent loan: {}", loanId);
+                throw new RuntimeException("Loan not found");
+            }
+        } catch (Exception e) {
+            logger.error("Error deleting loan", e);
+            throw new RuntimeException("Error deleting loan", e);
+        }
     }
 
     private boolean isValidLoan(LoanApplication loan) {

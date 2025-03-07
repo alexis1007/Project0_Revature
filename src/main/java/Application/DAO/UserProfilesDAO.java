@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -85,7 +84,7 @@ public class UserProfilesDAO {
             String sql = "INSERT INTO loans.user_profiles (users_id, mailing_addresses_id, first_name, " +
                         "last_name, phone_number, credit_score, birth_date) " +
                         "VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING user_profiles_id";
-            PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            PreparedStatement ps = conn.prepareStatement(sql);
             
             ps.setInt(1, profile.getUserId());
             ps.setInt(2, profile.getMailingAddressId());
@@ -95,9 +94,11 @@ public class UserProfilesDAO {
             ps.setInt(6, profile.getCreditScore());
             ps.setObject(7, profile.getBirthDate());
 
+            // Usar executeQuery() porque estamos usando RETURNING
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 profile.setUserProfileId(rs.getInt(1));
+                logger.info("Created profile for user: {}", profile.getUserId());
                 return profile;
             }
         } catch (SQLException e) {

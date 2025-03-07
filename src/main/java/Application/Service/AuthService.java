@@ -38,16 +38,28 @@ public class AuthService {
         return null;
     }
 
+    
     public User authenticateUser(String username, String rawPassword) {
         try {
             User user = userDAO.getUserByUsername(username);
-            if (user != null && BCrypt.checkpw(rawPassword, user.getPasswordHash())) {
+            
+            if (user == null) {
+                logger.warn("Authentication failed: username not found: {}", username);
+                return null;
+            }
+
+            //verifyer().verify(rawPassword.toCharArray, user.getPasswordHash());
+
+            System.out.println(BCrypt.checkpw(rawPassword, user.getPasswordHash()));
+
+            if (BCrypt.checkpw(rawPassword, user.getPasswordHash())) {
                 user.setLastLogin(LocalDateTime.now());
                 userDAO.updateLastLogin(user.getUserId());
                 logger.info("User authenticated successfully: {}", username);
                 return user;
             }
-            logger.warn("Authentication failed for username: {}", username);
+            
+            logger.warn("Authentication failed: invalid password for username: {}", username);
         } catch (Exception e) {
             logger.error("Error during authentication", e);
         }

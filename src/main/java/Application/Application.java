@@ -5,16 +5,18 @@ import Application.Controller.LoansController;
 import Application.Controller.MailingAddressController;
 import Application.Controller.UserController;
 import Application.Controller.UserProfilesController;
+import Application.Service.LoanApplicationService;
 import Application.Service.UserService;
 import io.javalin.Javalin;
 
 public class Application {
     public static void main(String[] args) {
         UserService userService = new UserService();
+        LoanApplicationService loanService = new LoanApplicationService();
         
         UserController userController = new UserController(userService);
         UserProfilesController userProfilesController = new UserProfilesController();
-        LoansController loansController = new LoansController();
+        LoansController loansController = new LoansController(loanService, userService);
         MailingAddressController mailingAddressController = new MailingAddressController();
         LoanTypeController loanTypeController = new LoanTypeController();
 
@@ -44,6 +46,7 @@ public class Application {
             app.get("/users/{user_id}", userController::getUserByIdHandler);
             app.get("/users", userController::getAllUsersHandler);
             app.put("/users/{user_id}", userController::updateUserHandler);
+            app.delete("/users/{user_id}", userController::deleteUserHandler);
 
             // Loan Type routes
             app.get("/loan-types", loanTypeController::getAllLoanTypes);
@@ -64,11 +67,18 @@ public class Application {
             app.put("/profiles/{id}", userProfilesController::updateProfileHandler);
             app.delete("/profiles/{id}", userProfilesController::deleteProfileHandler);
 
-            // Loan routes
-            app.get("/loans", loansController::getAllLoansHandler);
-            app.get("/loans/{id}", loansController::getLoanByIdHandler);
-            app.post("/loans", loansController::createLoanHandler);
-            app.put("/loans/{id}/status", loansController::updateLoanStatusHandler);
+            // Regular User Loan routes
+            app.get("/loans/user", loansController::getUserLoansHandler);          // Get user's own loans
+            app.get("/loans/{id}", loansController::getLoanByIdHandler);          // View specific loan
+            app.post("/loans", loansController::createLoanHandler);               // Create new loan
+            app.put("/loans/{id}", loansController::updateLoanHandler);           // Edit loan if pending
+            app.delete("/loans/{id}", loansController::deleteLoanHandler);        // Delete draft loan
+
+            // Manager Loan routes
+            app.get("/loans", loansController::getAllLoansHandler);               // View all loans
+            app.put("/loans/{id}/approve", loansController::approveLoanHandler); // Approve loan
+            app.put("/loans/{id}/reject", loansController::rejectLoanHandler);   // Reject loan
+            app.put("/loans/{id}/review", loansController::reviewLoanHandler);   // Mark for review
         });
     }
 }
