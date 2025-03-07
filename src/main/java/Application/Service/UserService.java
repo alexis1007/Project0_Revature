@@ -114,4 +114,13 @@ public class UserService {
     public boolean validatePassword(String password) {
         return ValidationUtils.isStrongPassword(password);
     }
+
+    public UserProfile getUserProfile(int userId) {
+        try {
+            return userProfilesDAO.getUserProfileByUserId(userId);
+        } catch (Exception e) {
+            logger.error("Error getting user profile for user ID: {}", userId, e);
+            return null;
+        }
+    }
 }

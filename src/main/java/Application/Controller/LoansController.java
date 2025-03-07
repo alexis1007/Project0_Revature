@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import Application.DTO.LoanRequestDTO;
 import Application.DTO.LoanResponseDTO;
 import Application.Model.LoanApplication;
+import Application.Model.UserProfile;
 import Application.Service.LoanApplicationService;
 import Application.Service.UserService;
 import Application.Util.AuthUtils;
@@ -71,6 +72,13 @@ public class LoansController {
                 ctx.status(400).json("Invalid loan data");
                 return;
             }
+
+            // Obtener el perfil del usuario actual
+            UserProfile userProfile = userService.getUserProfile(userId);
+            if (userProfile == null) {
+                ctx.status(400).json("User profile not found");
+                return;
+            }
             
             // Convertir DTO a modelo
             LoanApplication loan = new LoanApplication();
@@ -78,10 +86,10 @@ public class LoansController {
             loan.setPrincipalBalance(request.getAmount());
             loan.setInterest(request.getInterest());
             loan.setTermLength(request.getTermMonths());
-            loan.setBorrower(request.getBorrower()); 
+            loan.setBorrower(request.getBorrower());
             loan.setCreatedBy(userId);
             loan.setApplicationStatusId(1); // 1 = DRAFT status
-            loan.setUserProfileId(userId);  // Asociar con el perfil del usuario
+            loan.setUserProfileId(userProfile.getUserProfileId()); // Usar el ID del perfil correcto
             
             LoanApplication created = loanService.createLoan(loan);
             if (created != null) {
