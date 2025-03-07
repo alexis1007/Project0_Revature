@@ -41,6 +41,7 @@ public class Application {
             // Authentication routes
             app.post("/auth/register", userController::createUserHandler);
             app.post("/auth/login", userController::loginHandler);
+            app.post("/auth/logout", userController::logoutHandler);
 
             // User routes
             app.get("/users/{user_id}", userController::getUserByIdHandler);
